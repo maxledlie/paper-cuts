@@ -90,7 +90,7 @@ function defaultState(): State {
         camera: new Camera(1, 1), // We don't know the screen width and height yet.
         cameraPath: null,
         lights: [],
-        vision: false,
+        vision: true,
         lastCameraSetup: null,
     };
 }
