@@ -5,41 +5,18 @@ import {
     toObjectTransform,
     type Transform,
 } from "./transform";
-import CameraPanel from "./components/CameraPanel";
 import "./App.css";
 import { RaymondCanvas } from "./canvas/raymondCanvas";
-import { newPoint, newVector } from "./math";
+import { newVector } from "./math";
 import { Shape } from "./shapes";
 import ObjectPanel from "./components/ObjectPanel";
 import { PointLight } from "./canvas/PointLight";
 import LightPanel from "./components/LightPanel";
 
-function defaultTransform(): UITransform {
-    return {
-        scale: { x: 1, y: 1 },
-        translation: { x: 0, y: 0 },
-        rotation: 0,
-    };
-}
-
-function defaultCameraSetup(): CameraSetup {
-    return {
-        center: { x: 0, y: 0 },
-        rotation: 0,
-        size: { x: 1, y: 1 },
-    };
-}
-
 function App() {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
     const [canvas, setCanvas] = useState<RaymondCanvas | null>(null);
-    const [cameraTransform, setCameraTransform] =
-        useState<UITransform>(defaultTransform);
-
-    const [cameraSetup, setCameraSetup] =
-        useState<CameraSetup>(defaultCameraSetup);
-
     const [selectedObject, setSelectedObject] = useState<Shape | null>(null);
     const [selectedLight, setSelectedLight] = useState<PointLight | null>(null);
 
@@ -69,8 +46,6 @@ function App() {
                 return;
             }
             const state = getCanvasState(canvas);
-            setCameraTransform(state.cameraTransform);
-            setCameraSetup(state.cameraSetup);
             setSelectedObject(state.selectedShape);
             setSelectedLight(state.selectedLight);
             window.setTimeout(loop, 1000 / 24);
@@ -81,7 +56,7 @@ function App() {
         return () => {
             cancelled = true;
         };
-    }, [canvas, setCameraTransform]);
+    }, [canvas]);
 
     return (
         <div>
@@ -113,7 +88,6 @@ function App() {
                         style={{
                             top: 0,
                             right: 0,
-                            height: "50vh",
                         }}
                     >
                         <ObjectPanel
@@ -136,7 +110,6 @@ function App() {
                         style={{
                             top: 0,
                             right: 0,
-                            height: "50vh",
                         }}
                     >
                         <LightPanel
@@ -153,43 +126,6 @@ function App() {
                         />
                     </div>
                 )}
-
-                <div
-                    className="ui-panel"
-                    style={{
-                        bottom: 0,
-                        right: 0,
-                        height: "50vh",
-                    }}
-                >
-                    <CameraPanel
-                        setup={cameraSetup}
-                        setSetup={(setup) => {
-                            setCameraSetup(setup);
-                            canvas?.state.camera.setSetup({
-                                center: newPoint(
-                                    setup.center.x,
-                                    setup.center.y
-                                ),
-                                rotation: setup.rotation,
-                                size: newVector(setup.size.x, setup.size.y),
-                            });
-                        }}
-                        transform={cameraTransform}
-                        setTransform={(t) => {
-                            setCameraTransform(t);
-                            const transform = fromObjectTransform({
-                                scale: newVector(t.scale.x, t.scale.y),
-                                rotation: t.rotation,
-                                translation: newVector(
-                                    t.translation.x,
-                                    t.translation.y
-                                ),
-                            });
-                            canvas?.setCameraTransform(transform);
-                        }}
-                    />
-                </div>
             </div>
         </div>
     );
