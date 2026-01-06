@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { CameraSetup, Transform as UITransform } from "./uiTypes";
+import type { CameraSetup, UIShape, Transform as UITransform } from "./uiTypes";
 import {
     fromObjectTransform,
     toObjectTransform,
@@ -17,7 +17,7 @@ function App() {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
     const [canvas, setCanvas] = useState<RaymondCanvas | null>(null);
-    const [selectedObject, setSelectedObject] = useState<Shape | null>(null);
+    const [selectedObject, setSelectedObject] = useState<UIShape | null>(null);
     const [selectedLight, setSelectedLight] = useState<PointLight | null>(null);
 
     // Initialise the canvas once the DOM element is ready.
@@ -46,9 +46,13 @@ function App() {
                 return;
             }
             const state = getCanvasState(canvas);
-            setSelectedObject(state.selectedShape);
-            setSelectedLight(state.selectedLight);
-            window.setTimeout(loop, 1000 / 24);
+            setSelectedObject(
+                state.selectedShape ? serializeShape(state.selectedShape) : null
+            );
+            setSelectedLight(
+                state.selectedLight ? serializeLight(state.selectedLight) : null
+            );
+            window.setTimeout(loop, 1000 / 32);
         };
         loop();
 
@@ -91,9 +95,7 @@ function App() {
                         }}
                     >
                         <ObjectPanel
-                            transform={serializeTransform(
-                                selectedObject.transform
-                            )}
+                            transform={selectedObject.transform}
                             setTransform={(t) => {
                                 canvas?.setSelectedTransform(
                                     deserializeTransform(t)
@@ -151,6 +153,17 @@ function getCanvasState(canvas: RaymondCanvas): CanvasState {
         selectedShape: selected instanceof Shape ? selected : null,
         selectedLight: selected instanceof PointLight ? selected : null,
     };
+}
+
+function serializeShape(s: Shape): UIShape {
+    const transform = serializeTransform(s.transform);
+    const material = { ...s.material };
+    return { transform, material };
+}
+
+function serializeLight(l: PointLight): UILight {
+    const transform = serializeTransform(l.transform);
+    return { transform, color: l.color };
 }
 
 function serializeTransform(t: Transform): UITransform {
