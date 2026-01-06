@@ -1,5 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import type { CameraSetup, UIShape, Transform as UITransform } from "./uiTypes";
+import type {
+    CameraSetup,
+    UILight,
+    UIShape,
+    Transform as UITransform,
+} from "./uiTypes";
 import {
     fromObjectTransform,
     toObjectTransform,
@@ -18,7 +23,7 @@ function App() {
 
     const [canvas, setCanvas] = useState<RaymondCanvas | null>(null);
     const [selectedObject, setSelectedObject] = useState<UIShape | null>(null);
-    const [selectedLight, setSelectedLight] = useState<PointLight | null>(null);
+    const [selectedLight, setSelectedLight] = useState<UILight | null>(null);
 
     // Initialise the canvas once the DOM element is ready.
     // The canvas will independently draw its current state every frame, and update its current
@@ -115,9 +120,7 @@ function App() {
                         }}
                     >
                         <LightPanel
-                            transform={serializeTransform(
-                                selectedLight.transform
-                            )}
+                            transform={selectedLight.transform}
                             setTransform={(t) =>
                                 canvas?.setSelectedTransform(
                                     deserializeTransform(t)
