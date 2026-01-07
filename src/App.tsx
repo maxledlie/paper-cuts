@@ -25,7 +25,7 @@ function App() {
     const [selectedObject, setSelectedObject] = useState<UIShape | null>(null);
     const [selectedLight, setSelectedLight] = useState<UILight | null>(null);
 
-    // Initialise the canvas once the DOM element is ready.
+    // Initialise the canvas once the canvas DOM element and any required images are ready.
     // The canvas will independently draw its current state every frame, and update its current
     // state in response to DOM events on the canvas, like mouse clicks or movement.
     useEffect(() => {
@@ -33,9 +33,21 @@ function App() {
         if (!canvasElement) {
             throw Error("No canvas element found");
         }
-        const c = new RaymondCanvas(canvasElement);
-        c.start();
-        setCanvas(c);
+
+        const img = new Image();
+        img.src = "camera_filled.png";
+
+        const onLoad = () => {
+            const c = new RaymondCanvas(canvasElement, img);
+            c.start();
+            setCanvas(c);
+        };
+
+        img.addEventListener("load", onLoad);
+
+        return () => {
+            img.removeEventListener("load", onLoad);
+        };
     }, []);
 
     // Once canvas is created, start a loop to periodically pull its state into React state
@@ -77,6 +89,8 @@ function App() {
                     height: "100vh",
                 }}
             >
+                {/* Image assets for use in canvas */}
+                <image></image>
                 <canvas ref={canvasRef} tabIndex={1} />
             </div>
 

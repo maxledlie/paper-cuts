@@ -9,6 +9,7 @@ import {
     vec_magnitude,
     mat3_mul_mat,
     mat3_identity,
+    mat3_chain,
 } from "../math.js";
 import { Shape, Quad, Circle } from "../shapes.js";
 import {
@@ -22,7 +23,10 @@ import {
     type Transform,
     apply,
     fromObjectTransform,
+    rotation,
+    scaling,
     toObjectTransform,
+    translation,
 } from "../transform.js";
 import { PointLight } from "./PointLight.js";
 import { Canvas } from "./canvas.js";
@@ -97,10 +101,17 @@ function defaultState(): State {
 
 export class RaymondCanvas extends Canvas {
     state: State = defaultState();
+    cameraImage: HTMLImageElement;
     selectionLayer: SelectionLayer = new SelectionLayer(this.state.camera);
+
+    constructor(canvas: HTMLCanvasElement, cameraImage: HTMLImageElement) {
+        super(canvas);
+        this.cameraImage = cameraImage;
+    }
 
     setup() {
         const { state } = this;
+
         // We have to set these again once things are initialised.
         state.camera = new Camera(this.width, this.height);
         this.selectionLayer = new SelectionLayer(this.state.camera);
@@ -399,7 +410,7 @@ export class RaymondCanvas extends Canvas {
         this.selectionLayer.draw(this.ctx);
 
         // Work out the segments to actually draw
-        const { segments, vision } = computeSegments(state.eye, shapes, lights)
+        const { segments, vision } = computeSegments(state.eye, shapes, lights);
 
         ctx.lineWidth = 2;
         for (const { start, end, color, attenuation } of segments) {
@@ -509,12 +520,20 @@ export class RaymondCanvas extends Canvas {
     drawEye(ctx: CanvasRenderingContext2D, eye: Eye, hovered: boolean) {
         const { state } = this;
 
-        // Drawing the apparatus as a polygon is probably suboptimal.
-        // Maybe I should transform the canvas and use p.rect?
-        const topLeft = newPoint(-0.4, -0.1);
-        const topRight = newPoint(0, -0.1);
-        const bottomRight = newPoint(0, 0.1);
-        const bottomLeft = newPoint(-0.4, 0.1);
+        // Draw camera image
+
+        const oldTransform = ctx.getTransform();
+
+        // Get the combination of object and camera transforms
+        const mat = mat3_mul_mat(state.camera.transform, eye.transform);
+
+        // Hacks to get the image to the correct orientation
+        const m = mat3_chain([mat, scaling(1, -1), translation(-0.8, -0.5)]);
+        ctx.setTransform(m[0][0], m[1][0], m[0][1], m[1][1], m[0][2], m[1][2]);
+
+        // Draw the camera image so it occupies the eye's local rectangle
+        ctx.drawImage(this.cameraImage, 0, 0, 1, 1);
+        ctx.setTransform(oldTransform);
 
         if (hovered && state.debug) {
             // Draw local coordinate system of eye
@@ -522,23 +541,6 @@ export class RaymondCanvas extends Canvas {
             const majorColor = this.color(0, 255, 0, 255);
             this.drawCoordinates(eye.transform, majorColor, minorColor, 2);
         }
-
-        const points = [topLeft, topRight, bottomRight, bottomLeft].map((p) => {
-            const world = apply(eye.transform, p);
-            return state.camera.worldToScreen(world);
-        });
-
-        ctx.lineWidth = 0;
-        ctx.fillStyle = hovered ? "green" : "white";
-        ctx.beginPath();
-        ctx.moveTo(points[0].x, points[0].y);
-        for (const p of points.slice(1)) {
-            ctx.lineTo(p.x, p.y);
-        }
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-        ctx.lineWidth = 1;
     }
 
     drawLight(light: PointLight) {
