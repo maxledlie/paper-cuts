@@ -15,12 +15,11 @@ export class Eye {
     hitTest(worldPoint: Vec3): boolean {
         const local = apply(inverse(this.transform), worldPoint);
 
-        // The drawn rectangle is at local coords x in [-40, 0], y in [-10, 10]
         if (
-            local.x >= -0.4 &&
-            local.x <= 0 &&
-            local.y >= -0.1 &&
-            local.y <= 0.1
+            local.x >= -1 &&
+            local.x <= 0.2 &&
+            local.y >= -0.8 &&
+            local.y <= 0.4
         ) {
             return true;
         }
