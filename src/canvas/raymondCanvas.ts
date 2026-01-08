@@ -361,14 +361,6 @@ export class RaymondCanvas extends Canvas {
         const mouseScreen = newPoint(this.mouseX, this.mouseY);
         const mouseWorld = state.camera.screenToWorld(mouseScreen);
 
-        // Draw status indicators
-        ctx.textAlign = "right";
-        ctx.fillText(`Debug ${state.debug ? "ON" : "OFF"} (D)`, width - 10, 20);
-        ctx.fillText(
-            `Vision ${state.vision ? "ON" : "OFF"} (V)`,
-            width - 10,
-            40
-        );
         if (state.debug) {
             ctx.fillText(
                 `World: x: ${mouseWorld.x.toFixed(
@@ -469,6 +461,25 @@ export class RaymondCanvas extends Canvas {
                         xStep + (i === state.eye.numRays - 1 ? 0 : 1),
                         100
                     );
+                }
+
+                // Optionally draw light-grey boundaries between vision cells
+                const showBoundaries =
+                    !!state.lightingModelParams?.showVisionBoundaries;
+                if (showBoundaries) {
+                    ctx.save();
+                    ctx.lineWidth = 1;
+                    ctx.strokeStyle = this.color(200, 200, 200, 255);
+                    const topY = this.height - 110;
+                    const bottomY = topY + 100;
+                    for (let i = 1; i < state.eye.numRays; i++) {
+                        const x = pad + i * xStep;
+                        ctx.beginPath();
+                        ctx.moveTo(x, topY);
+                        ctx.lineTo(x, bottomY);
+                        ctx.stroke();
+                    }
+                    ctx.restore();
                 }
             }
         }
