@@ -30,8 +30,11 @@ import {
 import { PointLight } from "./PointLight.js";
 import { Canvas } from "./canvas.js";
 import { Eye } from "./Eye.js";
-import { computeSegments, setLogging, toggleSchlick } from "./optics.js";
+import { setLogging, toggleSchlick } from "./optics.js";
 import SelectionLayer from "./selection.js";
+import { lightingModelRegistry } from "./lightingModelRegistry.js";
+import { PhongTracingModel } from "./models/phongTracingModel.js";
+import type { LightingModel, LightingModelParams } from "./lightingModel.js";
 
 type ToolType = "quad" | "circle" | "pan" | "select" | "light";
 
@@ -72,9 +75,21 @@ interface State {
     lights: PointLight[];
     vision: boolean;
     lastCameraSetup: CameraSetup | null;
+    lightingModelId: string;
+    lightingModelParams: LightingModelParams;
 }
 
 function defaultState(): State {
+    // Register the Phong tracing model as default
+    const phongModel = new PhongTracingModel();
+    lightingModelRegistry.register(phongModel.id, phongModel, true);
+
+    // Get default parameters
+    const defaultParams: LightingModelParams = {};
+    for (const param of phongModel.parameters) {
+        defaultParams[param.id] = param.default;
+    }
+
     return {
         debug: false,
         lastMousePos: newPoint(0, 0),
@@ -95,6 +110,8 @@ function defaultState(): State {
         lights: [],
         vision: true,
         lastCameraSetup: null,
+        lightingModelId: phongModel.id,
+        lightingModelParams: defaultParams,
     };
 }
 
@@ -408,13 +425,30 @@ export class RaymondCanvas extends Canvas {
         // Draw selection box and handles for selected shape
         this.selectionLayer.draw(this.ctx);
 
-        // Work out the segments to actually draw
-        const { segments, vision } = computeSegments(state.eye, shapes, lights);
+        // Work out the segments to actually draw using the active lighting model
+        const lightingModel = lightingModelRegistry.get(state.lightingModelId);
+        if (!lightingModel) {
+            throw new Error(
+                `Lighting model "${state.lightingModelId}" not found in registry`
+            );
+        }
+        const { segments, vision } = lightingModel.computeSegments(
+            state.eye,
+            shapes,
+            lights,
+            state.lightingModelParams
+        );
 
         ctx.lineWidth = 2;
-        for (const { start, end, color, attenuation } of segments) {
-            ctx.strokeStyle = color_html(color, attenuation);
+        for (const { start, end, color, attenuation, dashed } of segments) {
+            if (dashed) {
+                ctx.strokeStyle = "white";
+                ctx.setLineDash([25, 10]);
+            } else {
+                ctx.strokeStyle = color_html(color, attenuation);
+            }
             this.drawLine(start, end);
+            ctx.setLineDash([]);
         }
 
         // Draw what the eye sees!
@@ -776,5 +810,37 @@ export class RaymondCanvas extends Canvas {
         if (selected instanceof PointLight) {
             selected.color = color;
         }
+    }
+
+    setLightingModelId(modelId: string) {
+        const model = lightingModelRegistry.get(modelId);
+        if (!model) {
+            console.error(`Lighting model "${modelId}" not found`);
+            return;
+        }
+        this.state.lightingModelId = modelId;
+
+        // Reset parameters to defaults
+        const params: LightingModelParams = {};
+        for (const param of model.parameters) {
+            params[param.id] = param.default;
+        }
+        this.state.lightingModelParams = params;
+    }
+
+    setLightingModelParam(paramId: string, value: unknown) {
+        this.state.lightingModelParams[paramId] = value;
+    }
+
+    getLightingModelId(): string {
+        return this.state.lightingModelId;
+    }
+
+    getLightingModel(): LightingModel {
+        return lightingModelRegistry.get(this.state.lightingModelId)!;
+    }
+
+    getLightingModelParams(): LightingModelParams {
+        return this.state.lightingModelParams;
     }
 }
