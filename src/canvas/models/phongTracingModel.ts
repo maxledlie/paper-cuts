@@ -1,0 +1,61 @@
+import type {
+    LightingModel,
+    LightingModelParameter,
+    LightingModelParams,
+} from "../lightingModel";
+import type { OpticsResult } from "../optics";
+import { computeSegments as computeOpticsSegments } from "../optics";
+import type { Eye } from "../Eye";
+import type { Shape } from "../../shapes";
+import type { PointLight } from "../PointLight";
+
+export class PhongTracingModel implements LightingModel {
+    id = "phong-tracing";
+    name = "Phong Ray Tracing";
+    description =
+        "Classic ray tracing with Phong shading, reflections, and refractions";
+
+    parameters: LightingModelParameter[] = [
+        {
+            id: "maxDepth",
+            name: "Max Recursion Depth",
+            type: "number",
+            min: 1,
+            max: 20,
+            step: 1,
+            default: 10,
+        },
+        {
+            id: "schlickEnabled",
+            name: "Fresnel Reflections (Schlick)",
+            type: "boolean",
+            default: true,
+        },
+        {
+            id: "showInfiniteRays",
+            name: "Show Rays to Infinity (Slow!)",
+            type: "boolean",
+            default: false,
+        },
+    ];
+
+    computeSegments(
+        eye: Eye,
+        shapes: Shape[],
+        lights: PointLight[],
+        params: LightingModelParams
+    ): OpticsResult {
+        const maxDepth = (params.maxDepth as number) ?? 10;
+        const schlickEnabled = (params.schlickEnabled as boolean) ?? true;
+        const showInfiniteRays = (params.showInfiniteRays as boolean) ?? false;
+
+        return computeOpticsSegments(
+            eye,
+            shapes,
+            lights,
+            maxDepth,
+            schlickEnabled,
+            showInfiniteRays
+        );
+    }
+}

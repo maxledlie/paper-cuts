@@ -146,7 +146,7 @@ function App() {
                             </div>
                         )
                     }
-                    bottomContent={<LightingModelPanel />}
+                    bottomContent={<LightingModelPanel canvas={canvas} />}
                 />
             </div>
         </div>

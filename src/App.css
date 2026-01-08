@@ -22,6 +22,11 @@ input[type=number] {
     color: #eeeeee;
 }
 
+select.form-input,
+input[type=checkbox] {
+    accent-color: #888;
+}
+
 /* Form styling */
 .form-group {
     display: grid;
@@ -53,6 +58,11 @@ input[type=number] {
     padding: 6px 8px;
     font-size: 13px;
     font-family: monospace;
+}
+
+select.form-input {
+    font-family: inherit;
+    cursor: pointer;
 }
 
 .form-input:focus {

@@ -34,6 +34,7 @@ export interface RaySegment {
 
 const BLACK: Color = { r: 0, g: 0, b: 0 };
 let SCHLICK_ENABLED = true;
+let SHOW_INFINITE_RAYS = false;
 let doLogging = false;
 
 interface IntersectionData {
@@ -77,8 +78,14 @@ export function computeSegments(
     eye: Eye,
     shapes: Shape[],
     lights: PointLight[],
-    maxDepth: number = 10
+    maxDepth: number = 10,
+    schlickEnabled: boolean = true,
+    showInfiniteRays: boolean = false
 ): OpticsResult {
+    // Store the parameters in module state for use in child functions
+    SCHLICK_ENABLED = schlickEnabled;
+    SHOW_INFINITE_RAYS = showInfiniteRays;
+
     if (doLogging) {
         console.log("Computing segments for eye: ", eye);
     }
@@ -146,6 +153,24 @@ function castRay(
     // If no hit, then there are no more segments along this path.
     const hit = intersections.find((x) => x.t >= 0);
     if (!hit) {
+        // If we should show infinite rays, create a dashed white segment
+        if (SHOW_INFINITE_RAYS) {
+            // Project the ray out to a reasonable distance (e.g., 100 units)
+            const infiniteDistance = 100;
+            const end = vec_add(
+                ray.start,
+                vec_mul(ray.direction, infiniteDistance)
+            );
+            return [
+                {
+                    start: ray.start,
+                    end: end,
+                    color: BLACK,
+                    attenuation: attenuation,
+                    dashed: true,
+                },
+            ];
+        }
         return [];
     }
 
