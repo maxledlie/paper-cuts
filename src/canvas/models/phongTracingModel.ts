@@ -37,6 +37,12 @@ export class PhongTracingModel implements LightingModel {
             type: "boolean",
             default: false,
         },
+        {
+            id: "showVisionBoundaries",
+            name: "Show Vision Cell Boundaries",
+            type: "boolean",
+            default: false,
+        },
     ];
 
     computeSegments(
