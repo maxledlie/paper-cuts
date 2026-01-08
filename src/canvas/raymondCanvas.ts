@@ -23,7 +23,6 @@ import {
     type Transform,
     apply,
     fromObjectTransform,
-    rotation,
     scaling,
     toObjectTransform,
     translation,
