@@ -1,0 +1,112 @@
+.side-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100vh;
+    background-color: #3d3d3d;
+    color: #eeeeee;
+    border-left: 1px solid #555;
+    transition: width 0.3s ease;
+    pointer-events: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.side-panel.open {
+    width: 380px;
+}
+
+.side-panel.closed {
+    width: 0;
+}
+
+.side-panel-toggle {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 11;
+    width: 30px;
+    height: 30px;
+    border: 1px solid #666;
+    background-color: #2d2d2d;
+    color: #eeeeee;
+    cursor: pointer;
+    font-size: 14px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.side-panel-toggle:hover {
+    background-color: #4d4d4d;
+}
+
+.side-panel-toggle:active {
+    background-color: #5d5d5d;
+}
+
+.side-panel-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.side-panel-top {
+    flex: 0 1 50%;
+    overflow-y: auto;
+    padding: 50px 10px 10px 10px;
+    border-bottom: 1px solid #555;
+    scrollbar-gutter: stable;
+}
+
+.side-panel-divider {
+    height: 1px;
+    background-color: #555;
+}
+
+.side-panel-bottom {
+    flex: 0 1 50%;
+    overflow-y: auto;
+    padding: 10px;
+    scrollbar-gutter: stable;
+}
+
+.side-panel-top h2,
+.side-panel-bottom h2 {
+    text-align: left;
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 16px;
+}
+
+.side-panel-top p,
+.side-panel-bottom p {
+    margin: 5px 0;
+    font-size: 13px;
+}
+
+/* Scrollbar styling for the side panel sections */
+.side-panel-top::-webkit-scrollbar,
+.side-panel-bottom::-webkit-scrollbar {
+    width: 8px;
+}
+
+.side-panel-top::-webkit-scrollbar-track,
+.side-panel-bottom::-webkit-scrollbar-track {
+    background: #3d3d3d;
+}
+
+.side-panel-top::-webkit-scrollbar-thumb,
+.side-panel-bottom::-webkit-scrollbar-thumb {
+    background: #666;
+    border-radius: 4px;
+}
+
+.side-panel-top::-webkit-scrollbar-thumb:hover,
+.side-panel-bottom::-webkit-scrollbar-thumb:hover {
+    background: #777;
+}

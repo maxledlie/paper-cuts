@@ -17,6 +17,8 @@ import { Shape } from "./shapes";
 import ObjectPanel from "./components/ObjectPanel";
 import { PointLight } from "./canvas/PointLight";
 import LightPanel from "./components/LightPanel";
+import SidePanel from "./components/SidePanel";
+import LightingModelPanel from "./components/LightingModelPanel";
 
 function App() {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -89,8 +91,6 @@ function App() {
                     height: "100vh",
                 }}
             >
-                {/* Image assets for use in canvas */}
-                <image></image>
                 <canvas ref={canvasRef} tabIndex={1} />
             </div>
 
@@ -105,46 +105,49 @@ function App() {
                     pointerEvents: "none",
                 }}
             >
-                {selectedObject && (
-                    <div
-                        className="ui-panel"
-                        style={{
-                            top: 0,
-                            right: 0,
-                        }}
-                    >
-                        <ObjectPanel
-                            transform={selectedObject.transform}
-                            setTransform={(t) => {
-                                canvas?.setSelectedTransform(
-                                    deserializeTransform(t)
-                                );
-                            }}
-                            material={selectedObject.material}
-                            setMaterial={(m) => canvas?.setSelectedMaterial(m)}
-                        />
-                    </div>
-                )}
-                {selectedLight && (
-                    <div
-                        className="ui-panel"
-                        style={{
-                            top: 0,
-                            right: 0,
-                        }}
-                    >
-                        <LightPanel
-                            transform={selectedLight.transform}
-                            setTransform={(t) =>
-                                canvas?.setSelectedTransform(
-                                    deserializeTransform(t)
-                                )
-                            }
-                            color={selectedLight.color}
-                            setColor={(c) => canvas?.setSelectedColor(c)}
-                        />
-                    </div>
-                )}
+                <SidePanel
+                    topContent={
+                        selectedObject ? (
+                            <div>
+                                <h2>Object Properties</h2>
+                                <ObjectPanel
+                                    transform={selectedObject.transform}
+                                    setTransform={(t) => {
+                                        canvas?.setSelectedTransform(
+                                            deserializeTransform(t)
+                                        );
+                                    }}
+                                    material={selectedObject.material}
+                                    setMaterial={(m) =>
+                                        canvas?.setSelectedMaterial(m)
+                                    }
+                                />
+                            </div>
+                        ) : selectedLight ? (
+                            <div>
+                                <h2>Light Properties</h2>
+                                <LightPanel
+                                    transform={selectedLight.transform}
+                                    setTransform={(t) =>
+                                        canvas?.setSelectedTransform(
+                                            deserializeTransform(t)
+                                        )
+                                    }
+                                    color={selectedLight.color}
+                                    setColor={(c) =>
+                                        canvas?.setSelectedColor(c)
+                                    }
+                                />
+                            </div>
+                        ) : (
+                            <div>
+                                <h2>Properties</h2>
+                                <p>Select an object or light to edit.</p>
+                            </div>
+                        )
+                    }
+                    bottomContent={<LightingModelPanel />}
+                />
             </div>
         </div>
     );

@@ -17,28 +17,25 @@ export function FloatDisplay({
     step,
 }: FloatDisplayProps) {
     return (
-        <div style={{ margin: "6px" }}>
-            <div className="form-field">
-                <label>
-                    {name}
-                    <input
-                        type="number"
-                        name={`${name} x`}
-                        value={truncateFloat(value, 2)}
-                        step={step ?? 0.01}
-                        onChange={(e) => {
-                            let val = parseFloat(e.target.value);
-                            if (min != null) {
-                                val = Math.max(min, val);
-                            }
-                            if (max != null) {
-                                val = Math.min(max, val);
-                            }
-                            setValue(val);
-                        }}
-                    ></input>
-                </label>
-            </div>
+        <div className="form-group">
+            <label className="form-label">{name}</label>
+            <input
+                className="form-input"
+                type="number"
+                name={`${name} x`}
+                value={truncateFloat(value, 2)}
+                step={step ?? 0.01}
+                onChange={(e) => {
+                    let val = parseFloat(e.target.value);
+                    if (min != null) {
+                        val = Math.max(min, val);
+                    }
+                    if (max != null) {
+                        val = Math.min(max, val);
+                    }
+                    setValue(val);
+                }}
+            />
         </div>
     );
 }
@@ -47,43 +44,62 @@ interface VectorDisplayProps {
     name: string;
     vector: Vec2;
     setVector: (v: Vec2) => void;
+    min?: number;
+    max?: number;
+    step?: number;
 }
-export function VectorDisplay({ name, vector, setVector }: VectorDisplayProps) {
+export function VectorDisplay({
+    name,
+    vector,
+    setVector,
+    min,
+    max,
+    step,
+}: VectorDisplayProps) {
+    const clampValue = (val: number): number => {
+        if (min != null) {
+            val = Math.max(min, val);
+        }
+        if (max != null) {
+            val = Math.min(max, val);
+        }
+        return val;
+    };
+
     return (
-        <div style={{ margin: "6px" }}>
-            <div className="form-field">
-                <label>
-                    {name} X{" "}
-                    <input
-                        type="number"
-                        name={`${name} x`}
-                        value={truncateFloat(vector.x, 2)}
-                        step={1}
-                        onChange={(e) =>
-                            setVector({
-                                x: parseFloat(e.target.value),
-                                y: vector.y,
-                            })
-                        }
-                    ></input>
-                </label>
+        <div className="vector-group">
+            <div className="vector-group-title">{name}</div>
+            <div className="form-group">
+                <label className="form-label form-label-short">X</label>
+                <input
+                    className="form-input"
+                    type="number"
+                    name={`${name} x`}
+                    value={truncateFloat(vector.x, 2)}
+                    step={step ?? 1}
+                    onChange={(e) =>
+                        setVector({
+                            x: clampValue(parseFloat(e.target.value)),
+                            y: vector.y,
+                        })
+                    }
+                />
             </div>
-            <div className="form-field">
-                <label>
-                    Y{" "}
-                    <input
-                        type="number"
-                        name={`${name} y`}
-                        value={truncateFloat(vector.y, 2)}
-                        step={1}
-                        onChange={(e) =>
-                            setVector({
-                                x: vector.x,
-                                y: parseFloat(e.target.value),
-                            })
-                        }
-                    ></input>
-                </label>
+            <div className="form-group">
+                <label className="form-label form-label-short">Y</label>
+                <input
+                    className="form-input"
+                    type="number"
+                    name={`${name} y`}
+                    value={truncateFloat(vector.y, 2)}
+                    step={step ?? 1}
+                    onChange={(e) =>
+                        setVector({
+                            x: vector.x,
+                            y: clampValue(parseFloat(e.target.value)),
+                        })
+                    }
+                />
             </div>
         </div>
     );
