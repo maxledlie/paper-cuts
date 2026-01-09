@@ -30,11 +30,15 @@ export interface RaySegment {
     color: Color;
     attenuation: number;
     dashed?: boolean;
+    normal?: Vec3;
 }
 
 const BLACK: Color = { r: 0, g: 0, b: 0 };
 let SCHLICK_ENABLED = true;
 let SHOW_INFINITE_RAYS = false;
+let SHOW_NORMALS = false;
+let SHOW_SHADOW_RAYS = false;
+let shadowRays: RaySegment[] = [];
 let doLogging = false;
 
 interface IntersectionData {
@@ -58,6 +62,7 @@ export function setLogging(logging: boolean) {
 export interface OpticsResult {
     segments: RaySegment[];
     vision: Color[];
+    shadowRays: RaySegment[];
 }
 
 /**
@@ -80,11 +85,16 @@ export function computeSegments(
     lights: PointLight[],
     maxDepth: number = 10,
     schlickEnabled: boolean = true,
-    showInfiniteRays: boolean = false
+    showInfiniteRays: boolean = false,
+    showNormals: boolean = false,
+    showShadowRays: boolean = false
 ): OpticsResult {
     // Store the parameters in module state for use in child functions
     SCHLICK_ENABLED = schlickEnabled;
     SHOW_INFINITE_RAYS = showInfiniteRays;
+    SHOW_NORMALS = showNormals;
+    SHOW_SHADOW_RAYS = showShadowRays;
+    shadowRays = [];
 
     if (doLogging) {
         console.log("Computing segments for eye: ", eye);
@@ -133,6 +143,7 @@ export function computeSegments(
     return {
         segments: allSegments,
         vision,
+        shadowRays,
     };
 }
 
@@ -189,6 +200,11 @@ function castRay(
         for (const light of lights) {
             const shadowed = isShadowed(data.overPoint, shapes, light);
             surface = color_add(surface, lighting(data, light, shadowed));
+
+            // Generate shadow rays if enabled
+            if (SHOW_SHADOW_RAYS) {
+                generateShadowRay(data, light, shapes);
+            }
         }
     } else {
         surface = data.shape.material.color;
@@ -248,6 +264,7 @@ function castRay(
         end: hitPoint,
         color,
         attenuation,
+        normal: SHOW_NORMALS ? data.normalv : undefined,
     };
     return [firstSegment, ...reflected, ...refracted];
 }
@@ -444,6 +461,58 @@ function reflect(inVec: Vec3, normal: Vec3) {
 
 function pointOnRay(ray: Ray, t: number): Vec3 {
     return vec_add(ray.start, vec_mul(ray.direction, t));
+}
+
+function generateShadowRay(
+    data: IntersectionData,
+    light: PointLight,
+    shapes: Shape[]
+): void {
+    const o = toObjectTransform(light.transform);
+    const lightPos = newPoint(o.translation.x, o.translation.y);
+
+    const toLight = vec_sub(lightPos, data.overPoint);
+    const distance = vec_magnitude(toLight);
+    const direction = vec_normalize(toLight);
+
+    const ray: Ray = {
+        start: data.overPoint,
+        direction,
+    };
+
+    const intersections = shapes.flatMap((shape) =>
+        shape.intersect(ray).map((t) => ({ t, shape }))
+    );
+
+    intersections.sort((a, b) => a.t - b.t);
+    const hit = intersections.find((x) => x.t >= 0);
+
+    const shadowColor = light.color;
+
+    if (!hit || hit.t >= distance) {
+        // Unobstructed - draw full ray in light color
+        shadowRays.push({
+            start: data.point,
+            end: lightPos,
+            color: shadowColor,
+            attenuation: 1,
+        });
+    } else {
+        // Obstructed - draw fainter dotted line from start to blocking object
+        const blockPoint = pointOnRay(ray, hit.t);
+        const faintColor = {
+            r: shadowColor.r * 0.5,
+            g: shadowColor.g * 0.5,
+            b: shadowColor.b * 0.5,
+        };
+        shadowRays.push({
+            start: data.point,
+            end: blockPoint,
+            color: faintColor,
+            attenuation: 1,
+            dashed: true,
+        });
+    }
 }
 
 /**

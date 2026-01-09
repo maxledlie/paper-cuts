@@ -43,6 +43,28 @@ export class PhongTracingModel implements LightingModel {
             type: "boolean",
             default: false,
         },
+        {
+            id: "showNormals",
+            name: "Show Normal Vectors",
+            type: "boolean",
+            default: false,
+        },
+        {
+            id: "showShadowRays",
+            name: "Show Shadow Rays",
+            type: "boolean",
+            default: false,
+        },
+        {
+            id: "visionPosition",
+            name: "Vision Rectangle Position",
+            type: "select",
+            default: "bottom",
+            options: [
+                { label: "Bottom", value: "bottom" },
+                { label: "Left", value: "left" },
+            ],
+        },
     ];
 
     computeSegments(
@@ -54,6 +76,8 @@ export class PhongTracingModel implements LightingModel {
         const maxDepth = (params.maxDepth as number) ?? 10;
         const schlickEnabled = (params.schlickEnabled as boolean) ?? true;
         const showInfiniteRays = (params.showInfiniteRays as boolean) ?? false;
+        const showNormals = (params.showNormals as boolean) ?? false;
+        const showShadowRays = (params.showShadowRays as boolean) ?? false;
 
         return computeOpticsSegments(
             eye,
@@ -61,7 +85,9 @@ export class PhongTracingModel implements LightingModel {
             lights,
             maxDepth,
             schlickEnabled,
-            showInfiniteRays
+            showInfiniteRays,
+            showNormals,
+            showShadowRays
         );
     }
 }

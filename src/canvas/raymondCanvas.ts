@@ -3,6 +3,7 @@ import {
     type Vec3,
     vec_add,
     vec_sub,
+    vec_mul,
     newPoint,
     newVector,
     vec_div,
@@ -347,15 +348,21 @@ export class RaymondCanvas extends Canvas {
         ctx.textAlign = "left";
         ctx.textBaseline = "top";
         ctx.font = "14px monospace";
-        for (let i = 0; i < tools.length; i++) {
-            const tool = tools[i];
-            const text =
-                (state.tool == tool.type ? "> " : "  ") +
-                tool.name +
-                " (" +
-                tool.hotkey.toUpperCase() +
-                ")";
-            ctx.fillText(text, 10, 20 * (i + 1));
+
+        // Only show tool text if vision bar is not on the left
+        const visionPosition =
+            (state.lightingModelParams?.visionPosition as string) ?? "bottom";
+        if (visionPosition !== "left") {
+            for (let i = 0; i < tools.length; i++) {
+                const tool = tools[i];
+                const text =
+                    (state.tool == tool.type ? "> " : "  ") +
+                    tool.name +
+                    " (" +
+                    tool.hotkey.toUpperCase() +
+                    ")";
+                ctx.fillText(text, 10, 20 * (i + 1));
+            }
         }
 
         const mouseScreen = newPoint(this.mouseX, this.mouseY);
@@ -424,7 +431,7 @@ export class RaymondCanvas extends Canvas {
                 `Lighting model "${state.lightingModelId}" not found in registry`
             );
         }
-        const { segments, vision } = lightingModel.computeSegments(
+        const { segments, vision, shadowRays } = lightingModel.computeSegments(
             state.eye,
             shapes,
             lights,
@@ -432,7 +439,14 @@ export class RaymondCanvas extends Canvas {
         );
 
         ctx.lineWidth = 2;
-        for (const { start, end, color, attenuation, dashed } of segments) {
+        for (const {
+            start,
+            end,
+            color,
+            attenuation,
+            dashed,
+            normal,
+        } of segments) {
             if (dashed) {
                 ctx.strokeStyle = "white";
                 ctx.setLineDash([25, 10]);
@@ -441,45 +455,133 @@ export class RaymondCanvas extends Canvas {
             }
             this.drawLine(start, end);
             ctx.setLineDash([]);
+
+            // Draw normal vector if present
+            if (normal) {
+                ctx.save();
+                ctx.lineWidth = 1;
+                ctx.strokeStyle = "cyan";
+                ctx.setLineDash([]);
+                const normalLength = 0.2; // Short line to visualize direction
+                const normalEnd = vec_add(end, vec_mul(normal, normalLength));
+                this.drawLine(end, normalEnd);
+                ctx.restore();
+            }
+        }
+
+        // Draw shadow rays if available
+        if (shadowRays && shadowRays.length > 0) {
+            ctx.lineWidth = 1;
+            for (const {
+                start,
+                end,
+                color,
+                attenuation,
+                dashed,
+            } of shadowRays) {
+                if (dashed) {
+                    ctx.strokeStyle = "white";
+                    ctx.setLineDash([5, 5]);
+                } else {
+                    ctx.strokeStyle = color_html(color, attenuation);
+                }
+                this.drawLine(start, end);
+                ctx.setLineDash([]);
+            }
         }
 
         // Draw what the eye sees!
         if (state.vision) {
-            const pad = 40;
-            ctx.strokeStyle = "white";
-            ctx.strokeRect(pad, this.height - 120, this.width - 2 * pad, 100);
-            if (state.eye) {
-                const xStep = (this.width - 2 * pad) / state.eye.numRays;
-                for (let i = 0; i < state.eye.numRays; i++) {
-                    ctx.fillStyle = color_html(
-                        vision[i] ?? { r: 0, g: 0, b: 0 },
-                        1
-                    );
-                    ctx.fillRect(
-                        pad + i * xStep,
-                        this.height - 120,
-                        xStep + (i === state.eye.numRays - 1 ? 0 : 1),
-                        100
-                    );
-                }
+            const visionPosition =
+                (state.lightingModelParams?.visionPosition as string) ??
+                "bottom";
 
-                // Optionally draw light-grey boundaries between vision cells
-                const showBoundaries =
-                    !!state.lightingModelParams?.showVisionBoundaries;
-                if (showBoundaries) {
-                    ctx.save();
-                    ctx.lineWidth = 1;
-                    ctx.strokeStyle = this.color(200, 200, 200, 255);
-                    const topY = this.height - 120;
-                    const bottomY = topY + 100;
-                    for (let i = 1; i < state.eye.numRays; i++) {
-                        const x = pad + i * xStep;
-                        ctx.beginPath();
-                        ctx.moveTo(x, topY);
-                        ctx.lineTo(x, bottomY);
-                        ctx.stroke();
+            if (visionPosition === "left") {
+                // Draw vision rectangle vertically on the left
+                const pad = 40;
+                const width = 100;
+                const height = this.height - 2 * pad;
+
+                ctx.strokeStyle = "white";
+                ctx.strokeRect(pad, pad, width, height);
+
+                if (state.eye) {
+                    const yStep = height / state.eye.numRays;
+                    for (let i = 0; i < state.eye.numRays; i++) {
+                        ctx.fillStyle = color_html(
+                            vision[i] ?? { r: 0, g: 0, b: 0 },
+                            1
+                        );
+                        ctx.fillRect(
+                            pad,
+                            pad + i * yStep,
+                            width,
+                            yStep + (i === state.eye.numRays - 1 ? 0 : 1)
+                        );
                     }
-                    ctx.restore();
+
+                    // Optionally draw light-grey boundaries between vision cells
+                    const showBoundaries =
+                        !!state.lightingModelParams?.showVisionBoundaries;
+                    if (showBoundaries) {
+                        ctx.save();
+                        ctx.lineWidth = 1;
+                        ctx.strokeStyle = this.color(200, 200, 200, 255);
+                        const leftX = pad;
+                        const rightX = pad + width;
+                        for (let i = 1; i < state.eye.numRays; i++) {
+                            const y = pad + i * yStep;
+                            ctx.beginPath();
+                            ctx.moveTo(leftX, y);
+                            ctx.lineTo(rightX, y);
+                            ctx.stroke();
+                        }
+                        ctx.restore();
+                    }
+                }
+            } else {
+                // Draw vision rectangle horizontally at the bottom (default)
+                const pad = 40;
+                ctx.strokeStyle = "white";
+                ctx.strokeRect(
+                    pad,
+                    this.height - 120,
+                    this.width - 2 * pad,
+                    100
+                );
+                if (state.eye) {
+                    const xStep = (this.width - 2 * pad) / state.eye.numRays;
+                    for (let i = 0; i < state.eye.numRays; i++) {
+                        ctx.fillStyle = color_html(
+                            vision[i] ?? { r: 0, g: 0, b: 0 },
+                            1
+                        );
+                        ctx.fillRect(
+                            pad + i * xStep,
+                            this.height - 120,
+                            xStep + (i === state.eye.numRays - 1 ? 0 : 1),
+                            100
+                        );
+                    }
+
+                    // Optionally draw light-grey boundaries between vision cells
+                    const showBoundaries =
+                        !!state.lightingModelParams?.showVisionBoundaries;
+                    if (showBoundaries) {
+                        ctx.save();
+                        ctx.lineWidth = 1;
+                        ctx.strokeStyle = this.color(200, 200, 200, 255);
+                        const topY = this.height - 120;
+                        const bottomY = topY + 100;
+                        for (let i = 1; i < state.eye.numRays; i++) {
+                            const x = pad + i * xStep;
+                            ctx.beginPath();
+                            ctx.moveTo(x, topY);
+                            ctx.lineTo(x, bottomY);
+                            ctx.stroke();
+                        }
+                        ctx.restore();
+                    }
                 }
             }
         }
