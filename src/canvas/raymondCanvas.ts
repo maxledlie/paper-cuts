@@ -138,25 +138,11 @@ export class RaymondCanvas extends Canvas {
             new Circle(
                 fromObjectTransform({
                     translation: newVector(0, 0),
-                    scale: newVector(1, 3),
+                    scale: newVector(2, 2),
                     rotation: 0,
                 }),
                 {
                     ...defaultMaterial(),
-                    transparency: 0.5,
-                    reflectivity: 0.1,
-                }
-            ),
-            new Quad(
-                fromObjectTransform({
-                    translation: newVector(8, 0),
-                    scale: newVector(1, 20),
-                    rotation: 0,
-                }),
-                {
-                    ...defaultMaterial(),
-                    color: { r: 200 / 255, g: 0, b: 150 / 255 },
-                    reflectivity: 0.9,
                 }
             ),
         ];
