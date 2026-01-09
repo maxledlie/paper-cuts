@@ -447,7 +447,7 @@ export class RaymondCanvas extends Canvas {
         if (state.vision) {
             const pad = 40;
             ctx.strokeStyle = "white";
-            ctx.strokeRect(pad, this.height - 110, this.width - 2 * pad, 100);
+            ctx.strokeRect(pad, this.height - 120, this.width - 2 * pad, 100);
             if (state.eye) {
                 const xStep = (this.width - 2 * pad) / state.eye.numRays;
                 for (let i = 0; i < state.eye.numRays; i++) {
@@ -457,7 +457,7 @@ export class RaymondCanvas extends Canvas {
                     );
                     ctx.fillRect(
                         pad + i * xStep,
-                        this.height - 110,
+                        this.height - 120,
                         xStep + (i === state.eye.numRays - 1 ? 0 : 1),
                         100
                     );
@@ -470,7 +470,7 @@ export class RaymondCanvas extends Canvas {
                     ctx.save();
                     ctx.lineWidth = 1;
                     ctx.strokeStyle = this.color(200, 200, 200, 255);
-                    const topY = this.height - 110;
+                    const topY = this.height - 120;
                     const bottomY = topY + 100;
                     for (let i = 1; i < state.eye.numRays; i++) {
                         const x = pad + i * xStep;

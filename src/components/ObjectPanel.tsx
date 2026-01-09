@@ -19,7 +19,6 @@ export default function ObjectPanel({
 }: ObjectPanelProps) {
     return (
         <div>
-            <h2>Selected Object</h2>
             <CollapsibleSection title="Transform" defaultOpen={false}>
                 <VectorDisplay
                     name="Position"
