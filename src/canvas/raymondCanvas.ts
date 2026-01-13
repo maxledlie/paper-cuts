@@ -432,6 +432,7 @@ export class RaymondCanvas extends Canvas {
             attenuation,
             dashed,
             normal,
+            reflect,
         } of segments) {
             if (dashed) {
                 ctx.strokeStyle = "white";
@@ -445,12 +446,23 @@ export class RaymondCanvas extends Canvas {
             // Draw normal vector if present
             if (normal) {
                 ctx.save();
-                ctx.lineWidth = 1;
+                ctx.lineWidth = 2;
                 ctx.strokeStyle = "cyan";
                 ctx.setLineDash([]);
-                const normalLength = 0.2; // Short line to visualize direction
+                const normalLength = 0.4; // Short line to visualize direction
                 const normalEnd = vec_add(end, vec_mul(normal, normalLength));
                 this.drawLine(end, normalEnd);
+                ctx.restore();
+            }
+            // Draw reflection vector if present (dashed, same color)
+            if (reflect) {
+                ctx.save();
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = "cyan";
+                ctx.setLineDash([4, 4]);
+                const reflLength = 0.4;
+                const reflEnd = vec_add(end, vec_mul(reflect, reflLength));
+                this.drawLine(end, reflEnd);
                 ctx.restore();
             }
         }

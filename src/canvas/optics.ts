@@ -31,12 +31,14 @@ export interface RaySegment {
     attenuation: number;
     dashed?: boolean;
     normal?: Vec3;
+    reflect?: Vec3;
 }
 
 const BLACK: Color = { r: 0, g: 0, b: 0 };
 let SCHLICK_ENABLED = true;
 let SHOW_INFINITE_RAYS = false;
 let SHOW_NORMALS = false;
+let SHOW_REFLECTIONS = false;
 let SHOW_SHADOW_RAYS = false;
 let shadowRays: RaySegment[] = [];
 let doLogging = false;
@@ -87,13 +89,15 @@ export function computeSegments(
     schlickEnabled: boolean = true,
     showInfiniteRays: boolean = false,
     showNormals: boolean = false,
-    showShadowRays: boolean = false
+    showShadowRays: boolean = false,
+    showReflections: boolean = false
 ): OpticsResult {
     // Store the parameters in module state for use in child functions
     SCHLICK_ENABLED = schlickEnabled;
     SHOW_INFINITE_RAYS = showInfiniteRays;
     SHOW_NORMALS = showNormals;
     SHOW_SHADOW_RAYS = showShadowRays;
+    SHOW_REFLECTIONS = showReflections;
     shadowRays = [];
 
     if (doLogging) {
@@ -265,6 +269,7 @@ function castRay(
         color,
         attenuation,
         normal: SHOW_NORMALS ? data.normalv : undefined,
+        reflect: SHOW_REFLECTIONS ? data.reflectv : undefined,
     };
     return [firstSegment, ...reflected, ...refracted];
 }
