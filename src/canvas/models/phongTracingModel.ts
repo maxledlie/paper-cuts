@@ -56,10 +56,16 @@ export class PhongTracingModel implements LightingModel {
             default: false,
         },
         {
+            id: "showReflections",
+            name: "Show Reflection Angle",
+            type: "boolean",
+            default: false,
+        },
+        {
             id: "visionPosition",
             name: "Vision Rectangle Position",
             type: "select",
-            default: "bottom",
+            default: "left",
             options: [
                 { label: "Bottom", value: "bottom" },
                 { label: "Left", value: "left" },
@@ -78,6 +84,7 @@ export class PhongTracingModel implements LightingModel {
         const showInfiniteRays = (params.showInfiniteRays as boolean) ?? false;
         const showNormals = (params.showNormals as boolean) ?? false;
         const showShadowRays = (params.showShadowRays as boolean) ?? false;
+        const showReflections = (params.showReflections as boolean) ?? false;
 
         return computeOpticsSegments(
             eye,
@@ -87,7 +94,8 @@ export class PhongTracingModel implements LightingModel {
             schlickEnabled,
             showInfiniteRays,
             showNormals,
-            showShadowRays
+            showShadowRays,
+            showReflections
         );
     }
 }
