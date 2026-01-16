@@ -65,7 +65,7 @@ export class PhongTracingModel implements LightingModel {
             id: "visionPosition",
             name: "Vision Rectangle Position",
             type: "select",
-            default: "left",
+            default: "bottom",
             options: [
                 { label: "Bottom", value: "bottom" },
                 { label: "Left", value: "left" },
